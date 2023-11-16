@@ -4,6 +4,8 @@ const { PrismaClient } = require('@prisma/client')
 const prisma = new PrismaClient()
 const { registerUser, loginUser,getUser } = require('./controllers/userController')
 const jwt = require('jsonwebtoken');
+const upload = require('./libs/multer').image;
+const { storageImage } = require('./controllers/mediaController');
 
 function authenticateToken(req, res, next) {
     const authHeader = req.headers['authorization'];
@@ -22,7 +24,18 @@ app.use(express.json())
 
 app.post('/register', registerUser)
 app.post('/login', loginUser)
+app.post('/upload-profile-picture', authenticateToken, upload.single('image'), async (req, res) => {
+    try {
+        if (!req.file) {
+            throw new Error("No image file provided");
+        }
+        console.log(req.file); 
 
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: error.message });
+    }
+});
 
 const PORT = process.env.PORT || 8080;
 app.listen(PORT, () => {
